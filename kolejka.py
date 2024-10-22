@@ -63,8 +63,12 @@ def symulacja(kolejka: Kolejka, kasy: List[SSCheckout]):
 
         for kasa in kasy:
             if timer >= kasa.free_at and not kolejka.is_empty():
-                processed_client, client_process_time = kasa.process_client(client=kolejka.queue.pop(0))
-                processed_clients_times.append(processed_client.time_in_queue + client_process_time)
+                processed_client, client_process_time = kasa.process_client(
+                    client=kolejka.queue.pop(0)
+                )
+                processed_clients_times.append(
+                    processed_client.time_in_queue + client_process_time
+                )
 
         kolejka.increase_clients_in_queue_time()
 
