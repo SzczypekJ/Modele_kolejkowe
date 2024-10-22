@@ -21,13 +21,17 @@ class SSCheckout:
         return f"Free at: {self.free_at}"
 
     def process_client(self, client: Client):
+        client_time = 0
         if client.amount == "little":
-            self.free_at += random.randint(1, 3)
+            client_time = random.randint(1, 3)
+            self.free_at += client_time
         elif client.amount == "medium":
-            self.free_at += random.randint(4, 7)
+            client_time = random.randint(4, 7)
+            self.free_at += client_time
         elif client.amount == "many":
-            self.free_at += random.randint(7, 10)
-        return client
+            client_time = random.randint(7, 10)
+            self.free_at += client_time
+        return client, client_time
 
 
 class Kolejka:
@@ -59,14 +63,14 @@ def symulacja(kolejka: Kolejka, kasy: List[SSCheckout]):
 
         for kasa in kasy:
             if timer >= kasa.free_at and not kolejka.is_empty():
-                processed_client = kasa.process_client(client=kolejka.queue.pop(0))
-                processed_clients_times.append(processed_client.time_in_queue)
+                processed_client, client_process_time = kasa.process_client(client=kolejka.queue.pop(0))
+                processed_clients_times.append(processed_client.time_in_queue + client_process_time)
 
         kolejka.increase_clients_in_queue_time()
 
         print(f"{timer}. długość kolejki = {len(kolejka.queue)}")
     print(
-        f"Średni czas klienta w kolejce = {round(sum(processed_clients_times) / len(processed_clients_times), 2)}"
+        f"Średni czas klienta w systemie = {round(sum(processed_clients_times) / len(processed_clients_times), 2)}"
     )
 
 
