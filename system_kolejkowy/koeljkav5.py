@@ -11,7 +11,8 @@ class Client:
         )[0]
         self.time_in_queue = 0
         self.arrival_time = arrival_time
-        self.patience = random.randint(5, 15)  # Maksymalny czas oczekiwania
+        # self.patience = random.randint(5, 15)  # Maksymalny czas oczekiwania
+        self.patience = 2
 
     def __repr__(self):
         return f"Amount: {self.amount}; Time in queue = {self.time_in_queue}"
@@ -29,11 +30,14 @@ class SSCheckout:
     def process_client(self, client: Client, current_time):
         client_time = 0
         if client.amount == "little":
-            client_time = random.randint(1, 3)
+            # client_time = random.randint(1, 3)
+            client_time = 2
         elif client.amount == "medium":
-            client_time = random.randint(4, 7)
+            # client_time = random.randint(4, 7)
+            client_time = 4
         elif client.amount == "many":
-            client_time = random.randint(7, 10)
+            # client_time = random.randint(8, 10)
+            client_time = 6
         self.free_at = current_time + client_time
         self.clients_served += 1  # Zwiększ licznik obsłużonych klientów przez tę kasę
         return client_time
@@ -58,13 +62,14 @@ class Kolejka:
                 remaining_clients.append(client)
             else:
                 # Klient jest niecierpliwy
-                if random.uniform(0, 1) > 0.5:
-                    # Klient decyduje się opuścić kolejkę
-                    self.num_impatient_clients += 1  # Zwiększ licznik
-                    # Nie dodajemy klienta do remaining_clients
-                else:
-                    # Klient decyduje się pozostać w kolejce
-                    remaining_clients.append(client)
+                # if random.uniform(0, 1) > 0.5:
+                #     # Klient decyduje się opuścić kolejkę
+                #     self.num_impatient_clients += 1  # Zwiększ licznik
+                #     # Nie dodajemy klienta do remaining_clients
+                # else:
+                #     # Klient decyduje się pozostać w kolejce
+                #     remaining_clients.append(client)
+                self.num_impatient_clients += 1
         self.queue = remaining_clients
 
     def increase_clients_in_queue_time(self):
