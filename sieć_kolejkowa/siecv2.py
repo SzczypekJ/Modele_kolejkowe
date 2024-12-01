@@ -1,7 +1,6 @@
 import random
 from typing import List, Optional
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 class Request:
@@ -10,20 +9,20 @@ class Request:
         self.arrival_time = arrival_time
         self.time_in_system = 0
         self.type = self.assign_type()
-        self.current_stage = 'Magazyn Surowców'
+        self.current_stage = "Magazyn Surowców"
         self.waiting_time = 0  # Total waiting time in queues
         self.in_transit = False
         self.next_stage_arrival_time = None
 
     def assign_type(self) -> str:
         return random.choices(
-            ['zielony', 'czerwony', 'niebieski'],
-            weights=[85, 10, 5],
-            k=1
+            ["zielony", "czerwony", "niebieski"], weights=[85, 10, 5], k=1
         )[0]
 
     def __repr__(self):
-        return f"Zgłoszenie {self.id}: Typ={self.type}, Obecny etap={self.current_stage}"
+        return (
+            f"Zgłoszenie {self.id}: Typ={self.type}, Obecny etap={self.current_stage}"
+        )
 
 
 class Stage:
@@ -33,12 +32,14 @@ class Stage:
         self.queue_limit = queue_limit  # Optional queue limit
         self.queue: List[Request] = []  # Queue of requests waiting to be processed
         self.transit_queue: List[Request] = []  # Requests in transit to the next stage
-        self.processed_requests: List[Request] = []  # Requests that have left the system from this stage
+        self.processed_requests: List[
+            Request
+        ] = []  # Requests that have left the system from this stage
         self.next_stages = []  # List of next stages with conditions
         self.statistics = {
-            'zielony': 0,
-            'czerwony': 0,
-            'niebieski': 0
+            "zielony": 0,
+            "czerwony": 0,
+            "niebieski": 0,
         }  # Stats of processed requests by type
         # Lists for data collection for plots and stats
         self.queue_lengths = []
@@ -70,15 +71,15 @@ class Stage:
 
     def process(self, current_time: int):
         # Randomize capacity for this time unit
-        if self.name == 'Linia Produkcyjna':
+        if self.name == "Linia Produkcyjna":
             self.capacity = random.randint(20, 80)
-        elif self.name == 'Personalizacja':
+        elif self.name == "Personalizacja":
             self.capacity = random.randint(4, 8)
-        elif self.name == 'Standardowe Testy Jakości':
+        elif self.name == "Standardowe Testy Jakości":
             self.capacity = random.randint(30, 65)
-        elif self.name == 'Badania na Prototypach':
+        elif self.name == "Badania na Prototypach":
             self.capacity = random.randint(1, 5)
-        elif self.name == 'Wysyłka':
+        elif self.name == "Wysyłka":
             self.capacity = random.randint(30, 65)
         # For 'Magazyn Surowców', capacity is infinite and doesn't change
 
@@ -88,9 +89,9 @@ class Stage:
         # Process requests in order of priority: blue, red, green
         processed_this_unit = []
         waiting_times_this_unit = []
-        blues = [r for r in self.queue if r.type == 'niebieski']
-        reds = [r for r in self.queue if r.type == 'czerwony']
-        greens = [r for r in self.queue if r.type == 'zielony']
+        blues = [r for r in self.queue if r.type == "niebieski"]
+        reds = [r for r in self.queue if r.type == "czerwony"]
+        greens = [r for r in self.queue if r.type == "zielony"]
 
         # Total number of processed requests in this time unit
         total_processed = 0
@@ -115,7 +116,9 @@ class Stage:
         self.max_queue_length = max(self.max_queue_length, len(self.queue))
 
         # Update utilization statistics
-        utilization_percent = (total_processed / self.capacity) * 100 if self.capacity > 0 else 0
+        utilization_percent = (
+            (total_processed / self.capacity) * 100 if self.capacity > 0 else 0
+        )
         self.utilization.append(utilization_percent)
         self.processed_per_time.append(total_processed)
         self.time.append(current_time)
@@ -128,7 +131,9 @@ class Stage:
 
         # Calculate average waiting time for this time unit
         if waiting_times_this_unit:
-            avg_waiting_time = sum(waiting_times_this_unit) / len(waiting_times_this_unit)
+            avg_waiting_time = sum(waiting_times_this_unit) / len(
+                waiting_times_this_unit
+            )
         else:
             avg_waiting_time = 0
         self.avg_waiting_times.append(avg_waiting_time)
@@ -142,7 +147,9 @@ class Stage:
 
         # Set request in transit
         request.in_transit = True
-        request.next_stage_arrival_time = current_time + 1  # Will arrive after 1 time unit
+        request.next_stage_arrival_time = (
+            current_time + 1
+        )  # Will arrive after 1 time unit
 
         # Add request to transit queue
         self.transit_queue.append((request, current_time))
@@ -155,7 +162,9 @@ class Stage:
                 arrived_requests.append(request)
 
         # Remove requests that have arrived
-        self.transit_queue = [(r, t) for r, t in self.transit_queue if r not in arrived_requests]
+        self.transit_queue = [
+            (r, t) for r, t in self.transit_queue if r not in arrived_requests
+        ]
 
         # Redirect requests to next stages based on conditions
         for request in arrived_requests:
@@ -177,32 +186,34 @@ class Stage:
 # Definition of specific stages
 class MagazynSurowcow(Stage):
     def __init__(self):
-        super().__init__('Magazyn Surowców', capacity=float('inf'))
+        super().__init__("Magazyn Surowców", capacity=float("inf"))
 
 
 class LiniaProdukcyjna(Stage):
     def __init__(self):
-        super().__init__('Linia Produkcyjna', capacity=0)  # Initial value doesn't matter
+        super().__init__(
+            "Linia Produkcyjna", capacity=0
+        )  # Initial value doesn't matter
 
 
 class Personalizacja(Stage):
     def __init__(self):
-        super().__init__('Personalizacja', capacity=0)
+        super().__init__("Personalizacja", capacity=0)
 
 
 class TestyJakosci(Stage):
     def __init__(self):
-        super().__init__('Standardowe Testy Jakości', capacity=0)
+        super().__init__("Standardowe Testy Jakości", capacity=0)
 
 
 class BadaniaPrototypow(Stage):
     def __init__(self):
-        super().__init__('Badania na Prototypach', capacity=0)
+        super().__init__("Badania na Prototypach", capacity=0)
 
 
 class Wysylka(Stage):
     def __init__(self):
-        super().__init__('Wysyłka', capacity=0)
+        super().__init__("Wysyłka", capacity=0)
 
 
 def symulacja(czas_trwania: int):
@@ -219,23 +230,27 @@ def symulacja(czas_trwania: int):
 
     # Linia Produkcyjna
     linia_produkcyjna.add_next_stage(
-        testy_jakosci, lambda r: r.type == 'zielony' and random.uniform(0, 1) < 0.99)
+        testy_jakosci, lambda r: r.type == "zielony" and random.uniform(0, 1) < 0.99
+    )
     linia_produkcyjna.add_next_stage(
-        personalizacja, lambda r: r.type == 'czerwony' and random.uniform(0, 1) < 0.99)
+        personalizacja, lambda r: r.type == "czerwony" and random.uniform(0, 1) < 0.99
+    )
     linia_produkcyjna.add_next_stage(
-        badania_prototypow, lambda r: r.type == 'niebieski' or random.uniform(0, 1) >= 0.99)
+        badania_prototypow,
+        lambda r: r.type == "niebieski" or random.uniform(0, 1) >= 0.99,
+    )
 
     # Personalizacja
+    personalizacja.add_next_stage(testy_jakosci, lambda r: random.uniform(0, 1) < 0.99)
     personalizacja.add_next_stage(
-        testy_jakosci, lambda r: random.uniform(0, 1) < 0.99)
-    personalizacja.add_next_stage(
-        badania_prototypow, lambda r: random.uniform(0, 1) >= 0.99)
+        badania_prototypow, lambda r: random.uniform(0, 1) >= 0.99
+    )
 
     # Testy Jakości
+    testy_jakosci.add_next_stage(wysylka, lambda r: random.uniform(0, 1) < 0.99)
     testy_jakosci.add_next_stage(
-        wysylka, lambda r: random.uniform(0, 1) < 0.99)
-    testy_jakosci.add_next_stage(
-        badania_prototypow, lambda r: random.uniform(0, 1) >= 0.99)
+        badania_prototypow, lambda r: random.uniform(0, 1) >= 0.99
+    )
 
     # All requests
     wszystkie_zgloszenia = []
@@ -245,66 +260,126 @@ def symulacja(czas_trwania: int):
     while current_time < czas_trwania:
         # Generate a random number of requests from 20 to 80
         num_new_requests = random.randint(20, 80)
-        new_requests = [Request(id=len(wszystkie_zgloszenia) + i + 1, arrival_time=current_time) for i in range(num_new_requests)]
+        new_requests = [
+            Request(id=len(wszystkie_zgloszenia) + i + 1, arrival_time=current_time)
+            for i in range(num_new_requests)
+        ]
         wszystkie_zgloszenia.extend(new_requests)
 
         # Add new requests to the warehouse
         magazyn.receive(new_requests)
 
         # Process each stage
-        for stage in [magazyn, linia_produkcyjna, personalizacja, testy_jakosci, badania_prototypow, wysylka]:
+        for stage in [
+            magazyn,
+            linia_produkcyjna,
+            personalizacja,
+            testy_jakosci,
+            badania_prototypow,
+            wysylka,
+        ]:
             stage.process(current_time)
             stage.update_waiting_times()
 
         # Update transits between stages
-        for stage in [magazyn, linia_produkcyjna, personalizacja, testy_jakosci, badania_prototypow]:
+        for stage in [
+            magazyn,
+            linia_produkcyjna,
+            personalizacja,
+            testy_jakosci,
+            badania_prototypow,
+        ]:
             stage.update_transit(current_time)
 
         current_time += 1
 
     # Collecting statistics
-    wszystkie_etapy = [magazyn, linia_produkcyjna, personalizacja, testy_jakosci, badania_prototypow, wysylka]
-    total_exits = len(badania_prototypow.processed_requests) + len(wysylka.processed_requests)
-    total_time_in_system = sum(r.time_in_system for r in badania_prototypow.processed_requests + wysylka.processed_requests)
+    wszystkie_etapy = [
+        magazyn,
+        linia_produkcyjna,
+        personalizacja,
+        testy_jakosci,
+        badania_prototypow,
+        wysylka,
+    ]
+    total_exits = len(badania_prototypow.processed_requests) + len(
+        wysylka.processed_requests
+    )
+    total_time_in_system = sum(
+        r.time_in_system
+        for r in badania_prototypow.processed_requests + wysylka.processed_requests
+    )
     total_waiting_times = sum(sum(stage.waiting_times) for stage in wszystkie_etapy)
 
     print("\nWyniki Symulacji:")
-    print(f"Całkowita liczba zgłoszeń wchodzących do systemu: {len(wszystkie_zgloszenia)}")
+    print(
+        f"Całkowita liczba zgłoszeń wchodzących do systemu: {len(wszystkie_zgloszenia)}"
+    )
 
-    num_green_shipped = len([r for r in wysylka.processed_requests if r.type == 'zielony'])
-    num_red_shipped = len([r for r in wysylka.processed_requests if r.type == 'czerwony'])
-    num_blue_shipped = len([r for r in wysylka.processed_requests if r.type == 'niebieski'])  # Should be zero
+    num_green_shipped = len(
+        [r for r in wysylka.processed_requests if r.type == "zielony"]
+    )
+    num_red_shipped = len(
+        [r for r in wysylka.processed_requests if r.type == "czerwony"]
+    )
+    num_blue_shipped = len(
+        [r for r in wysylka.processed_requests if r.type == "niebieski"]
+    )  # Should be zero
 
-    print(f"\nProdukty wysłane:")
+    print("\nProdukty wysłane:")
     print(f"  Zielone (standardowe): {num_green_shipped}")
     print(f"  Czerwone (personalizowane): {num_red_shipped}")
-    print(f"  Niebieskie (prototypy): {num_blue_shipped} (prototypy nie trafiają na wysyłkę)")
+    print(
+        f"  Niebieskie (prototypy): {num_blue_shipped} (prototypy nie trafiają na wysyłkę)"
+    )
 
-    num_blue_prototype = len([r for r in badania_prototypow.processed_requests if r.type == 'niebieski'])
-    num_green_prototype = len([r for r in badania_prototypow.processed_requests if r.type == 'zielony'])
-    num_red_prototype = len([r for r in badania_prototypow.processed_requests if r.type == 'czerwony'])
+    num_blue_prototype = len(
+        [r for r in badania_prototypow.processed_requests if r.type == "niebieski"]
+    )
+    num_green_prototype = len(
+        [r for r in badania_prototypow.processed_requests if r.type == "zielony"]
+    )
+    num_red_prototype = len(
+        [r for r in badania_prototypow.processed_requests if r.type == "czerwony"]
+    )
 
-    print(f"\nProdukty, które przeszły przez badania prototypowe:")
+    print("\nProdukty, które przeszły przez badania prototypowe:")
     print(f"  Niebieskie (Prototypy): {num_blue_prototype}")
     print(f"  Zielone: {num_green_prototype}")
     print(f"  Czerwone: {num_red_prototype}")
 
-    total_exited = num_green_shipped + num_red_shipped + num_blue_prototype + num_green_prototype + num_red_prototype
+    total_exited = (
+        num_green_shipped
+        + num_red_shipped
+        + num_blue_prototype
+        + num_green_prototype
+        + num_red_prototype
+    )
 
-    print(f"\nCałkowita liczba zgłoszeń opuszczających system: {total_exited} (powinno być równe lub mniejsze od liczby zgłoszeń wchodzących do systemu)")
+    print(
+        f"\nCałkowita liczba zgłoszeń opuszczających system: {total_exited} (powinno być równe lub mniejsze od liczby zgłoszeń wchodzących do systemu)"
+    )
 
     # Additional statistics
     if total_exited > 0:
         avg_time_in_system = total_time_in_system / total_exited
         avg_waiting_time_overall = total_waiting_times / total_exited
-        print(f"Średni czas zgłoszenia w systemie: {avg_time_in_system:.2f} jednostek czasu")
-        print(f"Średni całkowity czas oczekiwania w kolejkach: {avg_waiting_time_overall:.2f} jednostek czasu")
+        print(
+            f"Średni czas zgłoszenia w systemie: {avg_time_in_system:.2f} jednostek czasu"
+        )
+        print(
+            f"Średni całkowity czas oczekiwania w kolejkach: {avg_waiting_time_overall:.2f} jednostek czasu"
+        )
     else:
         print("Brak zgłoszeń opuszczających system.")
 
     # Check if any requests remain in the system
-    remaining_requests = sum(len(stage.queue) for stage in wszystkie_etapy) + sum(len(stage.transit_queue) for stage in wszystkie_etapy)
-    print(f"\nLiczba zgłoszeń pozostałych w systemie po zakończeniu symulacji: {remaining_requests}")
+    remaining_requests = sum(len(stage.queue) for stage in wszystkie_etapy) + sum(
+        len(stage.transit_queue) for stage in wszystkie_etapy
+    )
+    print(
+        f"\nLiczba zgłoszeń pozostałych w systemie po zakończeniu symulacji: {remaining_requests}"
+    )
 
     # Display statistics for each stage
     print("\nStatystyki etapów:")
@@ -313,18 +388,34 @@ def symulacja(czas_trwania: int):
         print(f"  Liczba zgłoszeń w kolejce: {len(stage.queue)}")
         print(f"  Liczba zgłoszeń w tranzycie: {len(stage.transit_queue)}")
         print(f"  Przetworzone zgłoszenia: {sum(stage.statistics.values())}")
-        print(f"  Statystyki typów:")
+        print("  Statystyki typów:")
         for type_, count in stage.statistics.items():
             print(f"    {type_.capitalize()}: {count}")
-        avg_queue_length = sum(stage.queue_lengths) / len(stage.queue_lengths) if stage.queue_lengths else 0
+        avg_queue_length = (
+            sum(stage.queue_lengths) / len(stage.queue_lengths)
+            if stage.queue_lengths
+            else 0
+        )
         print(f"  Średnia długość kolejki: {avg_queue_length:.2f}")
         print(f"  Maksymalna długość kolejki: {stage.max_queue_length}")
-        avg_utilization = sum(stage.utilization) / len(stage.utilization) if len(stage.utilization) > 0 else 0
+        avg_utilization = (
+            sum(stage.utilization) / len(stage.utilization)
+            if len(stage.utilization) > 0
+            else 0
+        )
         print(f"  Średnie wykorzystanie etapu: {avg_utilization:.2f}%")
         total_waiting_time_stage = sum(stage.waiting_times)
-        avg_waiting_time_stage = total_waiting_time_stage / len(stage.waiting_times) if stage.waiting_times else 0
-        print(f"  Średni czas oczekiwania w kolejce: {avg_waiting_time_stage:.2f} jednostek czasu")
-        print(f"  Całkowity czas oczekiwania w kolejce: {total_waiting_time_stage} jednostek czasu")
+        avg_waiting_time_stage = (
+            total_waiting_time_stage / len(stage.waiting_times)
+            if stage.waiting_times
+            else 0
+        )
+        print(
+            f"  Średni czas oczekiwania w kolejce: {avg_waiting_time_stage:.2f} jednostek czasu"
+        )
+        print(
+            f"  Całkowity czas oczekiwania w kolejce: {total_waiting_time_stage} jednostek czasu"
+        )
         print("")
 
     # Generate plots
@@ -332,9 +423,6 @@ def symulacja(czas_trwania: int):
 
 
 def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Request]):
-    import matplotlib.pyplot as plt
-    import numpy as np
-
     # 1. Queue Length Over Time for each stage
     plt.figure(figsize=(12, 6))
     for stage in stages[1:]:  # Skip 'Magazyn Surowców'
@@ -352,7 +440,7 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
     times_in_system = [r.time_in_system for r in requests if r.time_in_system > 0]
     if times_in_system:
         plt.figure(figsize=(8, 6))
-        plt.hist(times_in_system, bins=20, edgecolor='black', label="Czas w systemie")
+        plt.hist(times_in_system, bins=20, edgecolor="black", label="Czas w systemie")
         avg_time_in_system = sum(times_in_system) / len(times_in_system)
         plt.axvline(
             x=avg_time_in_system,
@@ -375,7 +463,12 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
         all_waiting_times.extend(stage.waiting_times)
     if all_waiting_times:
         plt.figure(figsize=(8, 6))
-        plt.hist(all_waiting_times, bins=20, edgecolor='black', label="Czas oczekiwania w kolejce")
+        plt.hist(
+            all_waiting_times,
+            bins=20,
+            edgecolor="black",
+            label="Czas oczekiwania w kolejce",
+        )
         avg_waiting_time = sum(all_waiting_times) / len(all_waiting_times)
         plt.axvline(
             x=avg_waiting_time,
@@ -420,9 +513,12 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
 
     # 6. Stage Utilization
     stage_names = [stage.name for stage in stages[1:]]
-    avg_utilizations = [sum(stage.utilization) / len(stage.utilization) if stage.utilization else 0 for stage in stages[1:]]
+    avg_utilizations = [
+        sum(stage.utilization) / len(stage.utilization) if stage.utilization else 0
+        for stage in stages[1:]
+    ]
     plt.figure(figsize=(10, 6))
-    plt.bar(stage_names, avg_utilizations, color='skyblue')
+    plt.bar(stage_names, avg_utilizations, color="skyblue")
     plt.title("Średnie wykorzystanie etapów")
     plt.xlabel("Etap")
     plt.ylabel("Wykorzystanie (%)")
@@ -435,7 +531,7 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
     # 7. Number of Requests Processed by Each Stage
     total_processed_by_stage = [sum(stage.statistics.values()) for stage in stages[1:]]
     plt.figure(figsize=(10, 6))
-    plt.bar(stage_names, total_processed_by_stage, color='green')
+    plt.bar(stage_names, total_processed_by_stage, color="green")
     plt.title("Liczba zgłoszeń przetworzonych przez każdy etap")
     plt.xlabel("Etap")
     plt.ylabel("Liczba przetworzonych zgłoszeń")
