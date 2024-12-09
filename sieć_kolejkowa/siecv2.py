@@ -330,10 +330,10 @@ def symulacja(czas_trwania: int):
     )  # Should be zero
 
     print("\nProdukty wysłane:")
-    print(f"  Zielone (standardowe): {num_standard_shipped}")
-    print(f"  Czerwone (personalizowane): {num_personalized_shipped}")
+    print(f"  Standardowe: {num_standard_shipped}")
+    print(f"  Personalizowane: {num_personalized_shipped}")
     print(
-        f"  Niebieskie (prototypy): {num_prototype_shipped} (prototypy nie trafiają na wysyłkę)"
+        f"  Prototypy: {num_prototype_shipped} (prototypy nie trafiają na wysyłkę)"
     )
 
     num_prototype_prototype = len(
@@ -347,9 +347,9 @@ def symulacja(czas_trwania: int):
     )
 
     print("\nProdukty, które przeszły przez badania prototypowe:")
-    print(f"  Niebieskie (Prototypy): {num_prototype_prototype}")
-    print(f"  Zielone: {num_standard_prototype}")
-    print(f"  Czerwone: {num_personalized_prototype}")
+    print(f"  Prototypy: {num_prototype_prototype}")
+    print(f"  Standardowe: {num_standard_prototype}")
+    print(f"  Personalizowane: {num_personalized_prototype}")
 
     total_exited = (
         num_standard_shipped
