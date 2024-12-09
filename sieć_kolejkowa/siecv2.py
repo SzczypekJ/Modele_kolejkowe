@@ -16,7 +16,7 @@ class Request:
 
     def assign_type(self) -> str:
         return random.choices(
-            ["zielony", "czerwony", "niebieski"], weights=[85, 10, 5], k=1
+            ["standard", "personalized", "prototype"], weights=[85, 10, 5], k=1
         )[0]
 
     def __repr__(self):
@@ -37,9 +37,9 @@ class Stage:
         ] = []  # Requests that have left the system from this stage
         self.next_stages = []  # List of next stages with conditions
         self.statistics = {
-            "zielony": 0,
-            "czerwony": 0,
-            "niebieski": 0,
+            "standard": 0,
+            "personalized": 0,
+            "prototype": 0,
         }  # Stats of processed requests by type
         # Lists for data collection for plots and stats
         self.queue_lengths = []
@@ -86,17 +86,17 @@ class Stage:
         # Save capacity history
         self.capacity_history.append(self.capacity)
 
-        # Process requests in order of priority: blue, red, green
+        # Process requests in order of priority: prototype, personalized, standard
         processed_this_unit = []
         waiting_times_this_unit = []
-        blues = [r for r in self.queue if r.type == "niebieski"]
-        reds = [r for r in self.queue if r.type == "czerwony"]
-        greens = [r for r in self.queue if r.type == "zielony"]
+        prototypes = [r for r in self.queue if r.type == "prototype"]
+        personalizeds = [r for r in self.queue if r.type == "personalized"]
+        standards = [r for r in self.queue if r.type == "standard"]
 
         # Total number of processed requests in this time unit
         total_processed = 0
 
-        for requests_of_type in [blues, reds, greens]:
+        for requests_of_type in [prototypes, personalizeds, standards]:
             for request in requests_of_type:
                 if total_processed >= self.capacity:
                     break  # Reached max capacity
@@ -230,14 +230,15 @@ def symulacja(czas_trwania: int):
 
     # Linia Produkcyjna
     linia_produkcyjna.add_next_stage(
-        testy_jakosci, lambda r: r.type == "zielony" and random.uniform(0, 1) < 0.99
+        testy_jakosci, lambda r: r.type == "standard" and random.uniform(0, 1) < 0.99
     )
     linia_produkcyjna.add_next_stage(
-        personalizacja, lambda r: r.type == "czerwony" and random.uniform(0, 1) < 0.99
+        personalizacja,
+        lambda r: r.type == "personalized" and random.uniform(0, 1) < 0.99,
     )
     linia_produkcyjna.add_next_stage(
         badania_prototypow,
-        lambda r: r.type == "niebieski" or random.uniform(0, 1) >= 0.99,
+        lambda r: r.type == "prototype" or random.uniform(0, 1) >= 0.99,
     )
 
     # Personalizacja
@@ -316,44 +317,44 @@ def symulacja(czas_trwania: int):
         f"Całkowita liczba zgłoszeń wchodzących do systemu: {len(wszystkie_zgloszenia)}"
     )
 
-    num_green_shipped = len(
-        [r for r in wysylka.processed_requests if r.type == "zielony"]
+    num_standard_shipped = len(
+        [r for r in wysylka.processed_requests if r.type == "standard"]
     )
-    num_red_shipped = len(
-        [r for r in wysylka.processed_requests if r.type == "czerwony"]
+    num_personalized_shipped = len(
+        [r for r in wysylka.processed_requests if r.type == "personalized"]
     )
-    num_blue_shipped = len(
-        [r for r in wysylka.processed_requests if r.type == "niebieski"]
+    num_prototype_shipped = len(
+        [r for r in wysylka.processed_requests if r.type == "prototype"]
     )  # Should be zero
 
     print("\nProdukty wysłane:")
-    print(f"  Zielone (standardowe): {num_green_shipped}")
-    print(f"  Czerwone (personalizowane): {num_red_shipped}")
+    print(f"  Zielone (standardowe): {num_standard_shipped}")
+    print(f"  Czerwone (personalizowane): {num_personalized_shipped}")
     print(
-        f"  Niebieskie (prototypy): {num_blue_shipped} (prototypy nie trafiają na wysyłkę)"
+        f"  Niebieskie (prototypy): {num_prototype_shipped} (prototypy nie trafiają na wysyłkę)"
     )
 
-    num_blue_prototype = len(
-        [r for r in badania_prototypow.processed_requests if r.type == "niebieski"]
+    num_prototype_prototype = len(
+        [r for r in badania_prototypow.processed_requests if r.type == "prototype"]
     )
-    num_green_prototype = len(
-        [r for r in badania_prototypow.processed_requests if r.type == "zielony"]
+    num_standard_prototype = len(
+        [r for r in badania_prototypow.processed_requests if r.type == "standard"]
     )
-    num_red_prototype = len(
-        [r for r in badania_prototypow.processed_requests if r.type == "czerwony"]
+    num_personalized_prototype = len(
+        [r for r in badania_prototypow.processed_requests if r.type == "personalized"]
     )
 
     print("\nProdukty, które przeszły przez badania prototypowe:")
-    print(f"  Niebieskie (Prototypy): {num_blue_prototype}")
-    print(f"  Zielone: {num_green_prototype}")
-    print(f"  Czerwone: {num_red_prototype}")
+    print(f"  Niebieskie (Prototypy): {num_prototype_prototype}")
+    print(f"  Zielone: {num_standard_prototype}")
+    print(f"  Czerwone: {num_personalized_prototype}")
 
     total_exited = (
-        num_green_shipped
-        + num_red_shipped
-        + num_blue_prototype
-        + num_green_prototype
-        + num_red_prototype
+        num_standard_shipped
+        + num_personalized_shipped
+        + num_prototype_prototype
+        + num_standard_prototype
+        + num_personalized_prototype
     )
 
     print(
