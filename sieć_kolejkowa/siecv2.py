@@ -2,7 +2,8 @@ import random
 from typing import List, Optional
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('TkAgg')
+
+matplotlib.use("TkAgg")
 
 
 class Request:
@@ -332,9 +333,7 @@ def symulacja(czas_trwania: int):
     print("\nProdukty wysłane:")
     print(f"  Standardowe: {num_standard_shipped}")
     print(f"  Personalizowane: {num_personalized_shipped}")
-    print(
-        f"  Prototypy: {num_prototype_shipped} (prototypy nie trafiają na wysyłkę)"
-    )
+    print(f"  Prototypy: {num_prototype_shipped} (prototypy nie trafiają na wysyłkę)")
 
     num_prototype_prototype = len(
         [r for r in badania_prototypow.processed_requests if r.type == "prototype"]
@@ -545,7 +544,88 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
     plt.close()
 
 
+def find_probability(state: List[int]) -> float:
+    if len(state) != 5:
+        return 0
+
+    probability = 1
+
+    mi_produkcja = 50
+    mi_personalizacja = 6
+    mi_testy = 47.5
+    mi_badania = 3
+    mi_wysylka = 47.5
+
+    p_mag_produkcja_standard, p_mag_produkcja_person, p_mag_produkcja_prototyp = 1, 1, 1
+    p_produkcja_testy_standard = 0.99
+    p_produkcja_badania_standard = 0.01
+    p_testy_wysylka_standard = 0.99
+    p_testy_badania_standard = 0.01
+
+    p_produkcja_personalizacja_person = 1
+    p_personalizacja_testy_person = 0.99
+    p_personalizacja_badania_person = 0.01
+    p_testy_wysylka_person = 0.99
+    p_testy_badania_person = 0.01
+
+    p_produkcja_badania_prototyp = 1
+
+    e_produkcja_standard = p_mag_produkcja_standard
+    e_testy_standard = e_produkcja_standard * p_produkcja_testy_standard
+    e_badania_standard = (
+        e_produkcja_standard * p_produkcja_badania_standard
+        + e_testy_standard * p_testy_badania_standard
+    )
+    e_wysylka_standard = e_testy_standard * p_testy_wysylka_standard
+
+    e_produkcja_person = p_mag_produkcja_person
+    e_personalizacja_person = e_produkcja_person * p_produkcja_personalizacja_person
+    e_testy_person = e_personalizacja_person * p_personalizacja_testy_person
+    e_badania_person = (
+        e_personalizacja_person * p_personalizacja_badania_person
+        + e_testy_person * p_testy_badania_person
+    )
+    e_wysylka_person = e_testy_person * p_testy_wysylka_person
+
+    e_produkcja_prototyp = p_mag_produkcja_prototyp
+    e_badania_prototyp = e_produkcja_prototyp * p_produkcja_badania_prototyp
+
+    lambda_standard, lambda_person, lambda_prototyp = 50 * 0.85, 50 * 0.1, 50 * 0.05
+
+    ro_produkcja = (
+        lambda_standard * (e_produkcja_standard / mi_produkcja)
+        + lambda_person * (e_produkcja_person / mi_produkcja)
+        + lambda_prototyp * (e_produkcja_prototyp / mi_produkcja)
+    )
+
+    ro_personalizacja = lambda_person * (e_personalizacja_person / mi_personalizacja)
+    ro_testy = lambda_standard * (e_testy_standard / mi_testy) + lambda_person * (
+        e_testy_person / mi_testy
+    )
+    ro_wysylka = lambda_standard * (e_wysylka_standard / mi_wysylka) + lambda_person * (
+        e_wysylka_person / mi_wysylka
+    )
+    ro_badania = (
+        lambda_standard * (e_badania_standard / mi_badania)
+        + lambda_person * (e_badania_person / mi_badania)
+        + lambda_prototyp * (e_badania_prototyp / mi_badania)
+    )
+
+    ros = [ro_produkcja, ro_personalizacja, ro_testy, ro_wysylka, ro_badania]
+
+    for amount, ro in zip(state, ros):
+        probability *= calc_prob(ro=ro, amount=amount)
+    return probability
+
+
+def calc_prob(ro: float, amount: int):
+    return (1 - ro) * (ro**amount)
+
+
 def main():
+    state = [1, 1, 1, 1, 1]
+    prob = find_probability(state=state)
+    print(prob)
     czas_trwania = int(input("Podaj czas trwania symulacji (w jednostkach czasu): "))
     symulacja(czas_trwania)
 
