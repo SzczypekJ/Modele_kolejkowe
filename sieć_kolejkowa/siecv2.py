@@ -75,15 +75,15 @@ class Stage:
     def process(self, current_time: int):
         # Randomize capacity for this time unit
         if self.name == "Linia Produkcyjna":
-            self.capacity = random.randint(20, 80)
+            self.capacity = random.randint(30, 90)
         elif self.name == "Personalizacja":
             self.capacity = random.randint(4, 8)
         elif self.name == "Standardowe Testy Jakości":
-            self.capacity = random.randint(30, 65)
+            self.capacity = random.randint(25, 75)
         elif self.name == "Badania na Prototypach":
-            self.capacity = random.randint(1, 5)
+            self.capacity = random.randint(1, 7)
         elif self.name == "Wysyłka":
-            self.capacity = random.randint(30, 65)
+            self.capacity = random.randint(25, 75)
         # For 'Magazyn Surowców', capacity is infinite and doesn't change
 
         # Save capacity history
@@ -292,6 +292,7 @@ def symulacja(czas_trwania: int):
             personalizacja,
             testy_jakosci,
             badania_prototypow,
+            wysylka
         ]:
             stage.update_transit(current_time)
 
@@ -367,7 +368,7 @@ def symulacja(czas_trwania: int):
         avg_time_in_system = total_time_in_system / total_exited
         avg_waiting_time_overall = total_waiting_times / total_exited
         print(
-            f"Średni czas zgłoszenia w systemie: {avg_time_in_system:.2f} jednostek czasu"
+            f"Średni czas zgłoszenia w sieci: {avg_time_in_system:.2f} jednostek czasu"
         )
         print(
             f"Średni całkowity czas oczekiwania w kolejkach: {avg_waiting_time_overall:.2f} jednostek czasu"
@@ -429,7 +430,7 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
     plt.figure(figsize=(12, 6))
     for stage in stages[1:]:  # Skip 'Magazyn Surowców'
         plt.plot(stage.time, stage.queue_lengths, label=stage.name)
-    plt.title("Długości kolejek w czasie")
+    plt.title("Długości kolejek w zależności od czasu")
     plt.xlabel("Czas")
     plt.ylabel("Liczba zgłoszeń w kolejce")
     plt.legend()
@@ -442,15 +443,15 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
     times_in_system = [r.time_in_system for r in requests if r.time_in_system > 0]
     if times_in_system:
         plt.figure(figsize=(8, 6))
-        plt.hist(times_in_system, bins=20, edgecolor="black", label="Czas w systemie")
+        plt.hist(times_in_system, bins=20, edgecolor="black", label="Czas w sieci")
         avg_time_in_system = sum(times_in_system) / len(times_in_system)
         plt.axvline(
             x=avg_time_in_system,
             color="red",
             linestyle="--",
-            label="Średni czas w systemie",
+            label="Średni czas w sieci",
         )
-        plt.title("Rozkład czasu spędzonego w systemie przez zgłoszenia")
+        plt.title("Rozkład czasu spędzonego w sieci przez zgłoszenia")
         plt.xlabel("Czas (jednostki czasu)")
         plt.ylabel("Liczba zgłoszeń")
         plt.legend()
@@ -461,8 +462,10 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
 
     # 3. Distribution of Waiting Time in Queues
     all_waiting_times = []
-    for stage in stages[1:]:  # Exclude 'Magazyn Surowców'
-        all_waiting_times.extend(stage.waiting_times)
+    # for stage in stages[1:]:  # Exclude 'Magazyn Surowców'
+    #     all_waiting_times.extend(stage.waiting_times)
+    for request in requests:
+        all_waiting_times.append(request.waiting_time)
     if all_waiting_times:
         plt.figure(figsize=(8, 6))
         plt.hist(
@@ -491,7 +494,7 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
     plt.figure(figsize=(12, 6))
     for stage in stages[1:]:
         plt.plot(stage.time, stage.processed_per_time, label=stage.name)
-    plt.title("Liczba przetworzonych zgłoszeń w czasie")
+    plt.title("Liczba przetworzonych zgłoszeń w danej jednostce czasu")
     plt.xlabel("Czas")
     plt.ylabel("Liczba przetworzonych zgłoszeń")
     plt.legend()
@@ -504,7 +507,7 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
     plt.figure(figsize=(12, 6))
     for stage in stages[1:]:
         plt.plot(stage.time, stage.avg_waiting_times, label=stage.name)
-    plt.title("Średni czas oczekiwania w kolejce w czasie")
+    plt.title("Średni czas oczekiwania w kolejce w danej jednostce czasu")
     plt.xlabel("Czas")
     plt.ylabel("Średni czas oczekiwania (jednostki czasu)")
     plt.legend()
@@ -521,7 +524,7 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
     ]
     plt.figure(figsize=(10, 6))
     plt.bar(stage_names, avg_utilizations, color="skyblue")
-    plt.title("Średnie wykorzystanie etapów")
+    plt.title("Średnie wykorzystanie systemów")
     plt.xlabel("Etap")
     plt.ylabel("Wykorzystanie (%)")
     plt.xticks(rotation=45)
@@ -534,8 +537,8 @@ def generate_plots(stages: List[Stage], simulation_time: int, requests: List[Req
     total_processed_by_stage = [sum(stage.statistics.values()) for stage in stages[1:]]
     plt.figure(figsize=(10, 6))
     plt.bar(stage_names, total_processed_by_stage, color="green")
-    plt.title("Liczba zgłoszeń przetworzonych przez każdy etap")
-    plt.xlabel("Etap")
+    plt.title("Liczba zgłoszeń przetworzonych przez każdy system")
+    plt.xlabel("System")
     plt.ylabel("Liczba przetworzonych zgłoszeń")
     plt.xticks(rotation=45)
     plt.grid(True)
@@ -550,11 +553,11 @@ def find_probability(state: List[int]) -> float:
 
     probability = 1
 
-    mi_produkcja = 50
+    mi_produkcja = 60
     mi_personalizacja = 6
-    mi_testy = 47.5
-    mi_badania = 3
-    mi_wysylka = 47.5
+    mi_testy = 50
+    mi_badania = 4
+    mi_wysylka = 50
 
     p_mag_produkcja_standard, p_mag_produkcja_person, p_mag_produkcja_prototyp = 1, 1, 1
     p_produkcja_testy_standard = 0.99
@@ -623,9 +626,9 @@ def calc_prob(ro: float, amount: int):
 
 
 def main():
-    state = [1, 1, 1, 1, 1]
-    prob = find_probability(state=state)
-    print(prob)
+    # state = [2, 3, 2, 1, 2]
+    # prob = find_probability(state=state)
+    # print(prob)
     czas_trwania = int(input("Podaj czas trwania symulacji (w jednostkach czasu): "))
     symulacja(czas_trwania)
 
